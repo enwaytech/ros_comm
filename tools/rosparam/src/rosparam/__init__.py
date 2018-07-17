@@ -403,6 +403,17 @@ def list_params(ns):
     except socket.error:
         raise RosParamIOException("Unable to communicate with master!")
 
+def list_unused_params():
+    """
+    Get list of all unused paramters
+    """
+    try:
+        names = get_param_server().getUnusedParams()
+        names.sort()
+        return names
+    except socket.error:
+        raise RosParamIOException("Unable to communicate with master!")
+
 # COMMAND-LINE PARSING
     
 def _rosparam_cmd_get_dump(cmd, argv):
@@ -565,6 +576,16 @@ def _rosparam_cmd_list(argv):
 
     print('\n'.join(list_params(ns)))
 
+def _rosparam_cmd_show_unused(argv):
+    """
+    Process command line for rosparam show_unused,
+
+    :param argv: command-line args, ``str``
+    """
+    parser = OptionParser(usage="usage: %prog list [namespace]", prog=NAME)
+    options, args = parser.parse_args(argv[2:])
+
+    print('\n'.join(list_unused_params()))
 
 def _rosparam_cmd_delete(argv):
     """
@@ -628,6 +649,8 @@ def yamlmain(argv=None):
             _rosparam_cmd_delete(argv)
         elif command == 'list':
             _rosparam_cmd_list(argv)
+        elif command == 'show_unused':
+            _rosparam_cmd_show_unused(argv)
         else:
             _fullusage()
     except RosParamException as e:

@@ -62,6 +62,7 @@ class ParamDictionary(object):
         """
         self.lock = RLock()
         self.parameters = {}
+        self.parameters_used = {}
         self.reg_manager = reg_manager
 
     def get_param_names(self):
@@ -78,7 +79,22 @@ class ParamDictionary(object):
         finally:
             self.lock.release()
         return param_names
-        
+
+    def get_unused(self):
+        """
+        Print all parameters which were not accessed.
+        Includes deleted parameters
+
+        @return: [code, statusMessage, parameterNameList]
+        @rtype: [int, str, [str]]
+        """
+        try:
+            self.lock.acquire()
+            unused = [param for param, used in self.parameters_used.items() if not used]
+        finally:
+            self.lock.release()
+        return unused
+
     def search_param(self, ns, key):
         """
         Search for matching parameter key for search param
@@ -162,6 +178,7 @@ class ParamDictionary(object):
                     if not type(val) == dict:
                         raise KeyError(val)
                     val = val[ns]
+            self.parameters_used[key] = True
             return val
         finally:
             self.lock.release()
@@ -190,21 +207,24 @@ class ParamDictionary(object):
                 # - last namespace is the actual key we're storing in
                 value_key = namespaces[-1]
                 namespaces = namespaces[:-1]
-                d = self.parameters
+                top_namespace = self.parameters
                 # - descend tree to the node we're setting
                 for ns in namespaces:
-                    if not ns in d:
-                        new_d = {}
-                        d[ns] = new_d
-                        d = new_d
+                    if not ns in top_namespace:
+                        new_namespace = {}
+                        top_namespace[ns] = new_namespace
+                        top_namespace = new_namespace
                     else:
-                        val = d[ns]
+                        new_top_namespace = top_namespace[ns]
                         # implicit type conversion of value to namespace
-                        if type(val) != dict:
-                            d[ns] = val = {}
-                        d = val
+                        if type(new_top_namespace) != dict:
+                            new_top_namespace = {}
+                            top_namespace[ns] = new_top_namespace
+                        top_namespace = new_top_namespace
 
-                d[value_key] = value
+                top_namespace[value_key] = value
+                if key not in self.parameters_used:
+                  self.parameters_used[key] = False
 
             # ParamDictionary needs to queue updates so that the updates are thread-safe
             if notify_task:

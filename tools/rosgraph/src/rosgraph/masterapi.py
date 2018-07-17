@@ -276,9 +276,19 @@ class Master(object):
         @return: [code, statusMessage, parameterNameList]
         @rtype: [int, str, [str]]
         """
-        return self._succeed(self.handle.getParamNames(self.caller_id))     
-            
-        
+        return self._succeed(self.handle.getParamNames(self.caller_id))
+
+    def getUnusedParams(self):
+        """
+        Get list of all parameter names stored on this server.
+        This does not adjust parameter names for caller's scope.
+
+        @return: [code, statusMessage, parameterNameList]
+        @rtype: [int, str, [str]]
+        """
+        return self._succeed(self.handle.getUnusedParams(self.caller_id))
+
+
     ################################################################################
         
     def getPid(self):

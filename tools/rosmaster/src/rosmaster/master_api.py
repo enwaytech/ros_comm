@@ -518,7 +518,19 @@ class ROSMasterHandler(object):
         @rtype: [int, str, [str]]
         """
         return 1, "Parameter names", self.param_server.get_param_names()
-            
+
+    @apivalidate([])
+    def getUnusedParams(self, caller_id):
+        """
+        Get list of all unused (= not accessed) parameters stored on this server.
+
+        @param caller_id: ROS caller id
+        @type  caller_id: str
+        @return: [code, statusMessage, parameterNameList]
+        @rtype: [int, str, [str]]
+        """
+        return 1, "Parameter names", self.param_server.get_unused()
+
     ##################################################################################
     # NOTIFICATION ROUTINES
 
